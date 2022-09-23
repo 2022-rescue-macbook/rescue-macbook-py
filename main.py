@@ -13,7 +13,7 @@ import random
 
 def main(
     max_len = 512,
-    batch_size = 54,
+    batch_size = 128,
     min_group_member = 4,
     max_group_member = 8
 ):
@@ -39,21 +39,22 @@ def main(
     
 
     ## create embedding 
-    result = []
-    for idx in range(0, len(id_list), batch_size):
-        batch_input = tokenizer.batch_encode_plus(
-            code_list[idx:idx+batch_size],
-            return_tensors="pt",
-            max_length = max_len,
-            truncation = True,
-            pad_to_max_length = True,
-            padding=True).to(device)
-        batch_output = model(**batch_input)
-        cls_embedding = batch_output.last_hidden_state[:, 0, :]
-        result.append(cls_embedding.to('cpu'))
-        del batch_input
-        del batch_output
-        del cls_embedding
+    with torch.no_grad():
+        result = []
+        for idx in range(0, len(id_list), batch_size):
+            batch_input = tokenizer.batch_encode_plus(
+                code_list[idx:idx+batch_size],
+                return_tensors="pt",
+                max_length = max_len,
+                truncation = True,
+                pad_to_max_length = True,
+                padding=True).to(device)
+            batch_output = model(**batch_input)
+            cls_embedding = batch_output.last_hidden_state[:, 0, :]
+            result.append(cls_embedding.to('cpu'))
+            del batch_input
+            del batch_output
+            del cls_embedding
     
     cls_embedding = torch.cat([r for r in result]).detach().numpy()
     
@@ -126,7 +127,7 @@ def main(
     response['labels'] = cluster_label
     response['group'] = [g for g in range(group_num)]
 
-    print(response)
+    # print(response)
     return response
 
 
