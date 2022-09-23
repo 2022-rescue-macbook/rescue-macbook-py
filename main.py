@@ -1,3 +1,4 @@
+import json
 from transformers import AutoTokenizer, AutoModel
 import torch
 import os
@@ -13,7 +14,7 @@ import random
 
 def main(
     max_len = 512,
-    batch_size = 128,
+    batch_size = 1000,
     min_group_member = 4,
     max_group_member = 8
 ):
@@ -112,22 +113,22 @@ def main(
     data_list = []
     for idx in range(total_len):
         data = {}
-        data['id'] = id_list[idx]
-        data['name'] = name_list[idx]
-        data['x'] = cls_tsne[idx, 0]
-        data['y'] = cls_tsne[idx, 1]
-        data['label'] = label_list[idx]
-        data['group'] = group_list[idx]
-        data['code'] = code_list[idx]
+        data['id'] = int(id_list[idx])
+        data['name'] = str(name_list[idx])
+        data['x'] = float(cls_tsne[idx, 0])
+        data['y'] = float(cls_tsne[idx, 1])
+        data['label'] = int(label_list[idx])
+        data['group'] = int(group_list[idx])
+        data['code'] = str(code_list[idx])
         data_list.append(data)
     
     response = {}
     response['data'] = data_list
-    response['centroid'] = centroid_id
-    response['labels'] = cluster_label
-    response['group'] = [g for g in range(group_num)]
+    response['centroid'] = list(centroid_id)
+    response['labels'] = [int(x) for x in list(cluster_label)]
+    response['group'] = [int(g) for g in range(group_num)]
 
-    # print(response)
+    print(json.dumps(response))
     return response
 
 
