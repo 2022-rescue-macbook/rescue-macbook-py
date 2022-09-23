@@ -40,20 +40,21 @@ def main(
 
     ## create embedding 
     result = []
-    for idx in range(0, len(id_list), batch_size):
-        batch_input = tokenizer.batch_encode_plus(
-            code_list[idx:idx+batch_size],
-            return_tensors="pt",
-            max_length = max_len,
-            truncation = True,
-            pad_to_max_length = True,
-            padding=True).to(device)
-        batch_output = model(**batch_input)
-        cls_embedding = batch_output.last_hidden_state[:, 0, :]
-        result.append(cls_embedding.to('cpu'))
-        del batch_input
-        del batch_output
-        del cls_embedding
+    with torch.no_grad():
+        for idx in range(0, len(id_list), batch_size):
+            batch_input = tokenizer.batch_encode_plus(
+                code_list[idx:idx+batch_size],
+                return_tensors="pt",
+                max_length = max_len,
+                truncation = True,
+                pad_to_max_length = True,
+                padding=True).to(device)
+            batch_output = model(**batch_input)
+            cls_embedding = batch_output.last_hidden_state[:, 0, :]
+            result.append(cls_embedding.to('cpu'))
+            del batch_input
+            del batch_output
+            del cls_embedding
     
     cls_embedding = torch.cat([r for r in result]).detach().numpy()
     
@@ -124,7 +125,7 @@ def main(
     response['data'] = data_list
     response['centroid'] = centroid_id
     response['labels'] = cluster_label
-    response['group'] = [g for g in range(group_num)]
+    response['group'] = [g for g in range(group_num+1)]
 
     print(response)
     return response
